@@ -1,0 +1,68 @@
+.vercel
+
+# Dependencies
+node_modules/
+
+# Production build
+dist/
+dist-ssr/
+
+# Vite
+.vite/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Package manager
+.npm/
+.pnpm-store/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# IDE and editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Operating system
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+
+# Testing and coverage
+coverage/
+.nyc_output/
+
+# Local databases and user data
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# Local backups and exports
+backups/
+exports/
+*.backup
+*.bak.zip

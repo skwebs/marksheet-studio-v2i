@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <title>Marksheet Studio</title>
+  <meta name="author" content="Satish Kumar Sharma" />
+
+  <!-- Tailwind CSS v4 browser runtime -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Lato:ital,wght@0,400;0,700;0,900;1,400&display=swap"
+    rel="stylesheet" />
+
+  <style>
+    /* ================================================================
+       MARKSHEET STYLES — Ink-Friendly Modern & Premium A4 Layout
+       ================================================================ */
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      font-family: Lato, sans-serif;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    body.A4 .sheet {
+      width: 210mm;
+      height: 296mm;
+    }
+
+    .sheet {
+      position: relative;
+      box-sizing: border-box;
+      margin: 0;
+      overflow: visible;
+      break-before: auto;
+    }
+
+    /* Compact QR frame and printer-friendly signature footer. */
+    .qr-frame { width: 35mm; height: 35mm; padding: 0.8mm; border-radius: 0; box-sizing: border-box; flex: 0 0 auto; }
+    .qr-frame img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .signature-row-static { flex-wrap: nowrap; flex-shrink: 0; padding-top: 2mm; padding-bottom: 1mm; }
+
+    /* Watermark layer isolated on ::before with 0.1 opacity so it is clearly visible */
+    .main-content {
+      position: relative;
+      isolation: isolate;
+      background: transparent;
+    }
+
+    .main-content::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image: none;
+      background-position: center;
+      background-size: 70px 70px;
+      background-repeat: repeat;
+      opacity: 0.1;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    @media screen {
+      body {
+        min-width: 210mm;
+        background: #e2e8f0;
+      }
+
+      .sheet {
+        margin: 5mm auto;
+        background: #fff;
+        box-shadow: 0 0.5mm 2mm rgba(0, 0, 0, 0.25);
+      }
+    }
+
+    @media print {
+      html,
+      body {
+        width: 210mm;
+        margin: 0;
+        padding: 0;
+        background: #fff;
+      }
+
+      .sheet {
+        margin: 0;
+        box-shadow: none;
+        overflow: visible;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+
+    /* Typewriter font styling for dynamic data fields */
+    .data {
+      font-family: 'Courier Prime', Courier, monospace, sans-serif;
+      color: #0f172a;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Enhanced data text size matching scale-125 visually without layout breakage */
+    .data-scaled {
+      font-family: 'Courier Prime', Courier, monospace, sans-serif;
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 1.15em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Typewriter typography for dynamic student data and marks. */
+    .data,
+    .data-scaled,
+    .marks-chart__value {
+      font-family: 'Courier Prime', Courier, monospace, sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .data {
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .data-scaled {
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 1.15em;
+    }
+
+    .header-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: center;
+      width: 100%;
+      line-height: 1.25;
+    }
+
+    .header-meta-grid.meta-without-middle {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .header-meta-grid.meta-without-middle.meta-one-side {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .header-meta-grid > div {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .header-meta-grid > div:empty,
+    .header-meta-grid > div span:empty {
+      display: none;
+    }
+
+    /* Pre-printed static denominator styling for fraction scores */
+    .static-print {
+      font-family: Lato, sans-serif;
+      color: #334155;
+      font-weight: 600;
+    }
+
+    /* Modern ink-friendly vertical bar chart */
+    .marks-chart {
+      padding: 10px 12px 9px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+      color: #1e293b;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      break-inside: avoid;
+      page-break-inside: avoid;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .marks-chart__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .marks-chart__title {
+      font-size: 10.5px;
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: .055em;
+      text-transform: uppercase;
+      color: #1e293b;
+    }
+
+    .marks-chart__subtitle {
+      font-size: 8.5px;
+      line-height: 1.2;
+      color: #475569;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .marks-chart__plot {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 6px;
+      height: 112px;
+      align-items: stretch;
+    }
+
+    .marks-chart__item {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: 13px minmax(0, 1fr) 15px;
+      text-align: center;
+    }
+
+    .marks-chart__value {
+      align-self: center;
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 800;
+      color: #1e293b;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .marks-chart__track {
+      position: relative;
+      min-height: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 4px 4px 0 0;
+      border-bottom: 1.5px solid #64748b;
+      background-image: linear-gradient(to top, rgba(148, 163, 184, .22) 1px, transparent 1px);
+      background-size: 100% 25%;
+    }
+
+    .marks-chart__bar {
+      position: relative;
+      width: min(62%, 26px);
+      height: var(--bar-height);
+      min-height: 2px;
+      border-radius: 4px 4px 0 0;
+      background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
+      border: 1px solid #1d4ed8;
+      border-bottom: none;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .marks-chart__subject {
+      padding-top: 4px;
+      font-size: 8.5px;
+      line-height: 1.1;
+      font-weight: 700;
+      color: #334155;
+      white-space: nowrap;
+    }
+
+    .marks-chart__summary {
+      margin-top: 6px;
+      padding-top: 5px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 8.5px;
+      line-height: 1.2;
+      color: #475569;
+    }
+
+    .marks-chart__summary strong {
+      color: #1d4ed8;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    @media print {
+      .marks-chart {
+        background: #fff;
+        border-color: #94a3b8;
+      }
+      .marks-chart__bar {
+        background: #3b82f6;
+        border: 1px solid #1d4ed8;
+        border-bottom: none;
+      }
+    }
+  </style>
+</head>
+
+<body class="A4 text-slate-900">
+  <section class="sheet p-4 flex flex-col">
+    <!-- Main Bordered Marksheet Frame -->
+    <div class="main-content border border-slate-800 h-full flex flex-col justify-between">
+
+      <!-- TOP CONTENT GROUP -->
+      <div>
+        <!-- Existing first header row: three configurable, page-aligned information columns -->
+        <div id="schoolHeaderMeta" class="header-meta-grid grid grid-cols-3 items-center px-3 py-1.5 text-xs font-bold tracking-wide text-slate-900 border-b border-slate-300 bg-slate-50/50">
+          <div id="schoolMetaLeft" class="text-left min-w-0">
+            <span id="schoolMetaLeftLabel"></span><span class="meta-separator"> : </span><span id="schoolMetaLeftValue"></span>
+          </div>
+          <div id="schoolMetaMiddle" class="text-center min-w-0">
+            <span id="schoolMetaMiddleLabel"></span><span class="meta-separator"> : </span><span id="schoolMetaMiddleValue"></span>
+          </div>
+          <div id="schoolMetaRight" class="text-right min-w-0">
+            <span id="schoolMetaRightLabel"></span><span class="meta-separator"> : </span><span id="schoolMetaRightValue"></span>
+          </div>
+        </div>
+
+        <!-- School Banner -->
+        <div id="schoolBanner" class="flex justify-between items-center px-4 py-2">
+          <div class="shrink-0">
+            <img id="schoolLogoLeft" width="82" height="82" alt="School logo" class="object-contain" />
+          </div>
+          <div class="grow flex flex-col text-center px-2">
+            <div class="school-name font-black text-4xl tracking-tight text-slate-900 font-[roboto,helvetica,sans-serif]">
+              
+            </div>
+            <div class="school-address font-bold text-sm tracking-wide text-slate-900 mt-0.5 uppercase">
+              
+            </div>
+            <div id="schoolManagementLine" class="text-xs font-medium text-slate-800 mt-0.5" hidden></div>
+          </div>
+          <div class="shrink-0">
+            <img id="schoolLogoRight" width="84" height="84" alt="School logo" class="object-contain" />
+          </div>
+        </div>
+
+        <!-- Report Card & Session Strip (Ink-friendly light blue tint) -->
+        <div class="w-full border-t border-slate-400 bg-blue-50/60 py-1.5 px-4 text-center">
+          <div class="text-sm font-bold tracking-wide text-slate-900 uppercase">
+            REPORT CARD [ <span id="examTitle" class="text-blue-900 font-black">HALF-YEARLY EXAMINATION</span> ]
+          </div>
+          <div class="text-sm font-bold tracking-wide text-slate-800 mt-0.5 uppercase">
+            SESSION <span id="academicSession" class=" font-black">2026-2027</span>
+          </div>
+        </div>
+
+        <!-- Student Profile Section (No truncation, light background so watermark shines through) -->
+        <div class="w-full border-t border-slate-400 bg-slate-50/40 py-2.5 px-4">
+          <div class="flex items-center gap-4">
+            <!-- Student Photo -->
+            <div class="shrink-0">
+              <div class="border border-slate-400 h-34 aspect-[20/23] bg-white overflow-hidden rounded shadow-2xs">
+                <img id="studentPhoto" src="./person.jpg" alt="Student Photo" class="h-full w-full object-cover" />
+              </div>
+            </div>
+
+            <!-- Student Details Table -->
+            <div class="grow border-x border-slate-300 px-5 py-1">
+              <table class="w-full text-left text-sm border-collapse">
+                <tbody>
+                  <tr class="border-b border-slate-200">
+                    <th class="py-1 w-32 font-semibold text-slate-700 align-top">Name</th>
+                    <td class="py-1 w-4 font-bold text-slate-500 align-top">:</td>
+                    <td id="stuName" class="py-1 data text-base break-words">Aarav Kumar Sharma</td>
+                  </tr>
+                  <tr class="border-b border-slate-200">
+                    <th class="py-1 font-semibold text-slate-700 align-top">Class &amp; Roll No.</th>
+                    <td class="py-1 font-bold text-slate-500 align-top">:</td>
+                    <td class="py-1">
+                      <span id="stuClass" class="data text-base">VIII 'A'</span>
+                      <span class="mx-3 text-slate-300">|</span>
+                      <span class="font-semibold text-slate-700">Roll No. : </span>
+                      <span id="stuRoll" class="data text-base">14</span>
+                    </td>
+                  </tr>
+                  <tr class="border-b border-slate-200">
+                    <th class="py-1 font-semibold text-slate-700 align-top">Mother's Name</th>
+                    <td class="py-1 font-bold text-slate-500 align-top">:</td>
+                    <td id="stuMother" class="py-1 data text-base break-words">Smt. Sunita Devi Sharma</td>
+                  </tr>
+                  <tr>
+                    <th class="py-1 font-semibold text-slate-700 align-top">Father's Name</th>
+                    <td class="py-1 font-bold text-slate-500 align-top">:</td>
+                    <td id="stuFather" class="py-1 data text-base break-words">Shri Rajeshwar Prasad Sharma</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Verification QR Code -->
+            <div class="shrink-0 flex flex-col items-center">
+              <div class="qr-frame shrink-0 aspect-square border border-slate-400 bg-white p-0.5">
+                <img src="./sample-qr-code.png" alt="Verification QR Code" class="w-full h-full object-contain" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scholastic Marks Table (Ink-friendly light header bg-slate-200/70) -->
+        <div class="w-full border-t border-slate-400 pt-2.5 pb-2 px-4">
+          <table class="w-full table-fixed text-center border border-slate-400 text-sm">
+            <thead class="bg-slate-200/70 text-slate-900 border-b-2 border-slate-400 text-xs uppercase tracking-wider font-bold">
+              <tr>
+                <th class="w-44 py-2 px-3 text-left border-r border-slate-400">Subjects</th>
+                <th class="py-2 px-2 border-r border-slate-400">PA-I <span class="static-print">(05)</span></th>
+                <th class="py-2 px-2 border-r border-slate-400">PA-II <span class="static-print">(05)</span></th>
+                <th class="py-2 px-2 border-r border-slate-400">HY <span class="static-print">(40)</span></th>
+                <th class="py-2 px-2 border-r border-slate-400 bg-blue-100/50 text-blue-950">Total <span class="static-print">(50)</span></th>
+                <th class="w-24 py-2 px-2">Grade</th>
+              </tr>
+            </thead>
+            <tbody id="marksTableBody" class="divide-y divide-slate-300">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+            <tfoot id="marksTableFoot" class="bg-slate-100 border-t-2 border-slate-400 font-bold text-sm">
+              <!-- Populated dynamically via JS -->
+            </tfoot>
+          </table>
+
+          <!-- Compact Grading Scale Bar -->
+          <div class="mt-2 px-3 py-1 border border-slate-300 rounded-md bg-slate-50/80 text-[11px] text-slate-700 flex items-center justify-between">
+            <span class="font-bold text-slate-900 uppercase">Grading Scale :</span>
+            <span><strong>A1</strong> (&ge;91%)</span>
+            <span><strong>A2</strong> (&ge;81%)</span>
+            <span><strong>B1</strong> (&ge;71%)</span>
+            <span><strong>B2</strong> (&ge;61%)</span>
+            <span><strong>C1</strong> (&ge;51%)</span>
+            <span><strong>C2</strong> (&ge;41%)</span>
+            <span><strong>D</strong> (&ge;33%)</span>
+            <span><strong>E</strong> (&lt;33%)</span>
+          </div>
+        </div>
+
+        <!-- Middle Analytics Dashboard: Summary Metrics & Remarks (Left) + Visual Bar Chart (Right) -->
+        <div class="w-full px-4 py-1.5 grid grid-cols-12 gap-3.5 items-stretch">
+
+          <!-- Left Column (5 cols): Overall Result Summary Cards + Remarks -->
+          <div class="col-span-5 flex flex-col justify-between gap-2">
+            <!-- 2x2 Summary KPI Grid -->
+            <div class="grid grid-cols-2 gap-2 text-center">
+              <div class="border border-slate-300 rounded-md p-2 bg-slate-50/70">
+                <div class="text-[10px] font-bold uppercase text-slate-500">Obtained Marks</div>
+                <div id="summaryMarks" class="text-base font-black text-slate-900 mt-0.5">—</div>
+              </div>
+              <div class="border border-slate-300 rounded-md p-2 bg-blue-50/40">
+                <div class="text-[10px] font-bold uppercase text-slate-500">Obtained Marks %</div>
+                <div id="summaryPercentage" class="text-base font-black text-blue-800 mt-0.5">—</div>
+              </div>
+              <div class="border border-slate-300 rounded-md p-2 bg-slate-50/70">
+                <div class="text-[10px] font-bold uppercase text-slate-500">Attendance</div>
+                <div id="summaryAttendance" class="text-base font-black text-slate-900 mt-0.5">—</div>
+              </div>
+              <div class="border border-slate-300 rounded-md p-2 bg-emerald-50/40">
+                <div class="text-[10px] font-bold uppercase text-slate-500">Grade</div>
+                <div id="summaryGrade" class="text-base font-black text-emerald-800 mt-0.5 data">—</div>
+              </div>
+            </div>
+
+            <!-- Remarks Card -->
+            <div class="border border-slate-300 rounded-md p-2.5 bg-amber-50/30 text-xs grow flex flex-col justify-center">
+              <div class="font-bold uppercase tracking-wider text-slate-700 mb-1">Remarks :</div>
+              <div id="teacherRemarks" class="data text-slate-900 text-xs leading-relaxed italic">
+                Consistent and commendable performance across all subjects. Shows strong analytical skills in Mathematics and Computer Science.
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column (7 cols): Modern Vertical Subject Performance Chart -->
+          <div class="col-span-7">
+            <section class="marks-chart" aria-label="Subject-wise performance chart">
+              <div class="marks-chart__header">
+                <div class="marks-chart__title">Subject Performance</div>
+                <div class="marks-chart__subtitle" id="marksChartScale">Total Marks / 50</div>
+              </div>
+              <div id="marksChart" class="marks-chart__plot"></div>
+              <div class="marks-chart__summary">
+                <span id="marksChartCaption">Synced with Total (50) column</span>
+                <span>Average <strong id="marksChartAverage">—</strong></span>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM CONTENT GROUP: Signatures & Light Contact Footer -->
+      <div>
+        <!-- Signature Section -->
+        <div class="w-full flex justify-around items-end px-4 pt-2 pb-1 signature-row-static">
+          <div class="w-1/5 flex flex-col items-center">
+            <div id="issueDate" class="font-bold text-base data-scaled pb-1">29-10-2026</div>
+            <div class="w-full font-bold text-xs uppercase tracking-wider border-t-2 border-dashed border-slate-500 pt-1 text-center text-slate-800">
+              Date
+            </div>
+          </div>
+
+          <div class="w-1/5 flex flex-col items-center">
+            <img class="w-28 h-10 object-contain mb-0.5" src="./digital-signature-png-download-33.png" alt="Teacher Signature" />
+            <div class="w-full font-bold text-xs uppercase tracking-wider border-t-2 border-dashed border-slate-500 pt-1 text-center text-slate-800">
+              Class Teacher
+            </div>
+          </div>
+
+          <div class="w-1/5 flex flex-col items-center">
+            <img class="w-28 h-10 object-contain mb-0.5" src="./digital-signature-png-download-33.png" alt="Exam Controller Signature" />
+            <div class="w-full font-bold text-xs uppercase tracking-wider border-t-2 border-dashed border-slate-500 pt-1 text-center text-slate-800">
+              Exam Controller
+            </div>
+          </div>
+
+          <div class="w-1/5 flex flex-col items-center">
+            <img class="w-28 h-10 object-contain mb-0.5" src="./digital-signature-png-download-33.png" alt="Principal Signature" />
+            <div class="w-full font-bold text-xs uppercase tracking-wider border-t-2 border-dashed border-slate-500 pt-1 text-center text-slate-800">
+              Principal
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Script for 100% data sync with table, summary, and vertical chart -->
+  <script>
+    (() => {
+      const reportCardData = {
+        examTitle: "HALF-YEARLY EXAMINATION",
+        session: "2026-2027",
+        issueDate: "29-10-2026",
+        student: {
+          name: "Aarav Kumar Sharma",
+          className: "VIII 'A'",
+          rollNo: "14",
+          motherName: "Smt. Sunita Devi Sharma",
+          fatherName: "Shri Rajeshwar Prasad Sharma",
+          attendanceNum: "104",
+          attendanceTotal: "110"
+        },
+        remarks:
+          "Consistent and commendable performance across all subjects. Shows strong analytical skills in Mathematics and Computer Science.",
+        maxMarksConfig: { pa1: 5, pa2: 5, hy: 40, total: 50 },
+        subjects: [
+          { name: "Hindi", shortName: "Hindi", pa1: 5, pa2: 4, hy: 34 },
+          { name: "English", shortName: "English", pa1: 4, pa2: 5, hy: 36 },
+          { name: "Maths", shortName: "Maths", pa1: 5, pa2: 5, hy: 38 },
+          { name: "Science", shortName: "Science", pa1: 4, pa2: 4, hy: 33 },
+          { name: "S.Science", shortName: "S.Sc.", pa1: 5, pa2: 4, hy: 35 },
+          { name: "Computer", shortName: "Computer", pa1: 5, pa2: 5, hy: 39 }
+        ]
+      };
+
+      const computeGrade = (percentage) => {
+        if (percentage >= 91) return "A1";
+        if (percentage >= 81) return "A2";
+        if (percentage >= 71) return "B1";
+        if (percentage >= 61) return "B2";
+        if (percentage >= 51) return "C1";
+        if (percentage >= 41) return "C2";
+        if (percentage >= 33) return "D";
+        return "E";
+      };
+
+      const formatNumber = (val) =>
+        Number.isInteger(val) ? String(val) : val.toFixed(1);
+
+      const setText = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+      };
+
+      setText("examTitle", reportCardData.examTitle);
+      setText("academicSession", reportCardData.session);
+      setText("issueDate", reportCardData.issueDate);
+      setText("stuName", reportCardData.student.name);
+      setText("stuClass", reportCardData.student.className);
+      setText("stuRoll", reportCardData.student.rollNo);
+      setText("stuMother", reportCardData.student.motherName);
+      setText("stuFather", reportCardData.student.fatherName);
+      setText("teacherRemarks", reportCardData.remarks);
+
+      const tbody = document.getElementById("marksTableBody");
+      const tfoot = document.getElementById("marksTableFoot");
+      const maxSubjectTotal = reportCardData.maxMarksConfig.total;
+
+      let grandPa1 = 0;
+      let grandPa2 = 0;
+      let grandHy = 0;
+      let grandObtained = 0;
+      const grandMax = reportCardData.subjects.length * maxSubjectTotal;
+
+      const computedChartItems = [];
+
+      if (tbody) {
+        tbody.replaceChildren();
+        reportCardData.subjects.forEach((sub, idx) => {
+          const total = sub.pa1 + sub.pa2 + sub.hy;
+          const pct = (total / maxSubjectTotal) * 100;
+          const grade = computeGrade(pct);
+
+          grandPa1 += sub.pa1;
+          grandPa2 += sub.pa2;
+          grandHy += sub.hy;
+          grandObtained += total;
+
+          computedChartItems.push({
+            subject: sub.shortName || sub.name,
+            fullName: sub.name,
+            marks: total,
+            maximum: maxSubjectTotal,
+            percentage: pct,
+            grade
+          });
+
+          const tr = document.createElement("tr");
+          tr.className = idx % 2 === 1 ? "bg-slate-100/50" : "bg-white/50";
+          tr.innerHTML = `
+            <th class="py-1.5 px-3 text-left border-r border-slate-300 font-bold text-slate-800">${sub.name}</th>
+            <td class="py-1.5 px-2 border-r border-slate-300 data-scaled">${formatNumber(sub.pa1)}</td>
+            <td class="py-1.5 px-2 border-r border-slate-300 data-scaled">${formatNumber(sub.pa2)}</td>
+            <td class="py-1.5 px-2 border-r border-slate-300 data-scaled">${formatNumber(sub.hy)}</td>
+            <td class="py-1.5 px-2 border-r border-slate-300 data-scaled text-blue-900 bg-blue-50/40">${formatNumber(total)}</td>
+            <td class="py-1.5 px-2 data-scaled text-emerald-800">${grade}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      const overallPercentage = grandMax > 0 ? (grandObtained / grandMax) * 100 : 0;
+      const overallGrade = computeGrade(overallPercentage);
+
+      if (tfoot) {
+        const maxPa1All = reportCardData.subjects.length * reportCardData.maxMarksConfig.pa1;
+        const maxPa2All = reportCardData.subjects.length * reportCardData.maxMarksConfig.pa2;
+        const maxHyAll = reportCardData.subjects.length * reportCardData.maxMarksConfig.hy;
+
+        tfoot.innerHTML = `
+          <tr>
+            <td class="py-1.5 px-3 text-left border-r border-slate-400 uppercase tracking-wider text-xs text-slate-800">Grand Total</td>
+            <td class="py-1.5 px-2 border-r border-slate-400 data-scaled">${formatNumber(grandPa1)}</td>
+            <td class="py-1.5 px-2 border-r border-slate-400 data-scaled">${formatNumber(grandPa2)}</td>
+            <td class="py-1.5 px-2 border-r border-slate-400 data-scaled">${formatNumber(grandHy)}</td>
+            <td class="py-1.5 px-2 border-r border-slate-400 bg-blue-100/60 data-scaled text-blue-950">${formatNumber(grandObtained)}</td>
+            <td class="py-1.5 px-2 data-scaled text-emerald-800">${overallGrade}</td>
+          </tr>
+        `;
+      }
+
+      const summaryMarksEl = document.getElementById("summaryMarks");
+      if (summaryMarksEl) {
+        summaryMarksEl.innerHTML = `<span class="data-scaled">${formatNumber(grandObtained)}</span><span class="static-print"> / ${grandMax}</span>`;
+      }
+
+      const summaryPercentageEl = document.getElementById("summaryPercentage");
+      if (summaryPercentageEl) {
+        summaryPercentageEl.innerHTML = `<span class="data-scaled">${overallPercentage.toFixed(2)}</span><span class="static-print">%</span>`;
+      }
+
+      const summaryAttendanceEl = document.getElementById("summaryAttendance");
+      if (summaryAttendanceEl) {
+        summaryAttendanceEl.innerHTML = `<span class="data-scaled">${reportCardData.student.attendanceNum}</span><span class="static-print"> / ${reportCardData.student.attendanceTotal}</span>`;
+      }
+
+      setText("summaryGrade", overallGrade);
+
+      const chart = document.getElementById("marksChart");
+      const scaleLabel = document.getElementById("marksChartScale");
+      const averageLabel = document.getElementById("marksChartAverage");
+      const caption = document.getElementById("marksChartCaption");
+
+      if (chart) {
+        chart.replaceChildren();
+
+        computedChartItems.forEach(({ subject, fullName, marks, maximum, percentage, grade }) => {
+          const clampedPct = Math.max(0, Math.min(100, percentage));
+          const item = document.createElement("div");
+          item.className = "marks-chart__item";
+
+          const value = document.createElement("div");
+          value.className = "marks-chart__value";
+          value.innerHTML = `<span class="data-scaled">${formatNumber(marks)}</span><span class="static-print">/${formatNumber(maximum)}</span>`;
+
+          const track = document.createElement("div");
+          track.className = "marks-chart__track";
+          track.setAttribute("role", "img");
+          track.setAttribute(
+            "aria-label",
+            `${fullName}: ${formatNumber(marks)} out of ${formatNumber(maximum)} (${percentage.toFixed(1)}%, Grade ${grade})`
+          );
+
+          const bar = document.createElement("div");
+          bar.className = "marks-chart__bar";
+          bar.style.setProperty("--bar-height", `${clampedPct}%`);
+          track.appendChild(bar);
+
+          const label = document.createElement("div");
+          label.className = "marks-chart__subject";
+          label.textContent = subject;
+          label.title = `${fullName}: ${formatNumber(marks)}/${formatNumber(maximum)} (${grade})`;
+
+          item.append(value, track, label);
+          chart.appendChild(item);
+        });
+
+        if (scaleLabel) {
+          scaleLabel.textContent = `Total Marks / ${formatNumber(maxSubjectTotal)}`;
+        }
+        if (averageLabel) {
+          averageLabel.textContent = `${overallPercentage.toFixed(1)}%`;
+        }
+        if (caption) {
+          caption.textContent = `${computedChartItems.length} subjects · synced with Total (${maxSubjectTotal})`;
+        }
+      }
+    })();
+  </script>
+</body>
+
+</html>
